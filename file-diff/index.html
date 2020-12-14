@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      background-color: #fff;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    .main {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    img {
+      flex: 1;
+      max-width: fit-content;
+    }
+
+    input[type=checkbox] {
+      margin-right: 10px;
+      transform: scale(1.5);
+    }
+    
+    button {
+      padding: 20px;
+      font-weight: bolder;
+      font-size: 15px;
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      background-color: #7159c1;
+    }
+
+    .file-input {
+      padding: 30px;
+      border: 3px solid  #7159c1;
+      border-radius: 8px;
+      margin-right: 15px;
+    }
+
+    .row {
+      display: flex;
+      flex-direction: row;
+      margin-top: 20px;
+    }
+</style>
+  <title>Comparação de Arquivos</title>
+</head>
+<body>
+  <div class="main">
+    <div class="row">
+    <!-- <label for="file1" class="btn">Selecione o Arquivo 1</label> -->
+    <input type="file" id="file1" accept=".txt" class="file-input">
+
+    <!-- <label for="file2" class="btn">Selecione o Arquivo 2</label> -->
+    <input type="file" id="file2" accept=".txt" class="file-input">
+  </div>
+
+  <div class="row">
+    <input type="checkbox" id="comparison-type" value="line">
+    <label for="type-comparasion"> Ignorar ordem das linhas</label><br>
+  </div>
+
+  <div class="row">Ao marcar a opção acima se o elemento do arquivo 1 existir em qualquer linha no arquivo 2 ele será removido do arquivo 1</div>
+
+
+    <div class="row">
+      <button type="button" onclick="diffFiles()">Comparar Arquivos</button> 
+    </div>
+    
+  </div>
+  <script>
+    function download(filename, text) {
+      var element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute('download', filename);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    }
+
+    function readFile(fileInput) {
+      return new Promise((resolve, reject) => {
+        let content = '';
+        const reader = new FileReader();
+
+        reader.onloadend = function(e) {
+          content = e.target.result;
+          const result = content.split(/\r\n|\n/);
+          resolve(result);
+        };
+
+        reader.onerror = function(e) {
+          alert(e.target.error.name);
+          reject(e);
+        };
+
+        reader.readAsText(fileInput);
+      });
+    }
+
+    async function diffFiles() {
+      const file1Selector = document.getElementById('file1');
+      const file2Selector = document.getElementById('file2');
+      const shouldIgnoreLinePosition = document.getElementById('comparison-type').checked === true;
+
+      const fileList1 = file1Selector.files;
+      const fileList2 = file2Selector.files;
+
+      if (fileList1.length == 0 || fileList2.length == 0) {
+        alert('Selecione os 2 arquivos');
+        return;
+      }
+
+      const file1 = fileList1[0];
+      const file2 = fileList2[0];
+
+      const file1Content = await readFile(file1);
+      const file2Content = await readFile(file2);
+
+      const diffFileoutput = file1Content.filter((line, idx) => {
+        const partToCompare1 = line.split('|')[0];
+        const partToCompare2 = (typeof file2Content[idx] === 'undefined' ? '' : file2Content[idx].split('|')[0]);
+
+        if(shouldIgnoreLinePosition) {
+          return !file2Content.includes(partToCompare1);
+        }
+
+        return partToCompare1 !== partToCompare2;
+      });
+
+      // console.log(diffFileoutput)
+
+      download('arquivo_diferenca.txt', diffFileoutput.join('\n'));
+    }
+  </script>
+</body>
+</html>
