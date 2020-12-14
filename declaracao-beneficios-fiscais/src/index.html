@@ -253,7 +253,7 @@
       </fieldset>
 
       <div class="row">
-        <button type="button" class="button" onclick="run()">Gerar Documento</button>
+        <button type="button" class="button" onclick="run()">Gerar TXT</button>
       </div>
     </form>
 
@@ -291,7 +291,7 @@
           // a.download = `dbf.txt`;
           // a.click();
         } catch (error) {
-          console.log(error)
+          console.log(error);
         }
       }
 
@@ -326,8 +326,54 @@
         });
       }
 
-      function sanitizeCnpj(cnpj) {
-        return cnpj.replace(/[0-9]/gi, '').slice(0, 14);
+      function formatDataToLayoutDBF(jsonData) {
+        function sanitizeOnlyNumbers(value) {
+          return String(value).replace(/\D/gi, '').slice(0, 14);
+        }
+
+        function formatCnpjCpf(value) {
+          const sanitizedInput = sanitizeOnlyNumbers(value);
+          return sanitizedInput.length <= 11 ? sanitizedInput.padStart(11, '0').padEnd(14, ' ') : sanitizedInput.padStart(14, '0');
+          // try {
+          // if(sanitizedInput.length !== 14 || sanitizedInput.length !== 11) {
+          //   throw "O arquivo possui CPF/CNPJ Inválido, por favor verifique e tente novamente";
+          // }
+          // } catch (error) {
+          //   alert(error);
+          // }
+      }
+
+        function formatCurrency(value) {
+        return String(value.toFixed(2)).replace('.', '').padStart(14, '0');
+      }
+
+        const outputData = [];
+        let totalRecordsType1 = 0;
+        let totalRecordsType2 = 0;
+
+        jsonData.forEach((row, idx) => {
+          // header record type 0
+          if (idx === 0) {
+            outputData.push(`0${sanitizeOnlyNumbers(row.CNPJBasico)}${row.AnoCalendario}02`);
+          }
+
+          if (Number(row.TipoDeFundo) === 1) {
+            totalRecordsType1 = totalRecordsType1 + 1;
+          }
+
+          if (Number(row.TipoDeFundo) === 2) {
+            totalRecordsType2 = totalRecordsType2 + 1;
+          }
+
+          const line = `${row.TipoDeFundo}${formatCnpjCpf(row.CNPJBenefic)}${formatCnpjCpf(row.CNPJDoador)}${row.TipoDoacao}${formatCurrency(row.ValorDoacao)}`;
+          outputData.push(line);
+
+          // // footer record type 9
+          if(idx === (jsonData.length - 1)){
+            outputData.push(`9${String(totalRecordsType1).padStart(6, '0')}${String(totalRecordsType2).padStart(6, '0')}`);
+          }
+        });
+        return outputData.join('\n');
       }
 
       async function run() {
@@ -336,45 +382,20 @@
           alert('Slecione um Arquivo');
           return;
         }
+
+        const name = inputFile.files[0].name;
+        const lastDot = name.lastIndexOf('.');
+        // const fileName = name.substring(0, lastDot);
+        const ext = name.substring(lastDot + 1);
+
+        if(ext.toLowerCase() !== 'xlsx') {
+          alert('Arquivo inválido, selecione uma planilha XLSX');
+          return;
+        }
+
         const fileDataAsJson = await getSheetDataAsJson(inputFile.files[0]);
-
-        const outputData = [];
-
-        fileDataAsJson.forEach((row, idx) => {
-          // header record type 0
-          if(idx === 0) {
-            outputData.push(`0${sanitizeCnpj(row.CNPJBasico)}${row.AnoCalendario}02`);
-          }
-
-          const line = `${row.​​TipoDeFundo.trim()}${sanitizeCnpj(row.​​CNPJBenefic)}${sanitizeCnpj(row.​​CNPJDoador)}${row.​​TipoDoacao.trim()}${row.​​ValorDoacao.padStart(13, '0')}`;
-          outputData.push();
-          row.AnoCalendario
-          row.CNPJBasico
-          
-          
-          row.​​TipoDeFundo
-          row.​​TipoDoacao
-          row.​​ValorDoacao
-        });
-        /*
-        row.AnoCalendario: 2019
-  ​​      row.CNPJBasico: 46634226
-
-        row.​​TipoDeFundo: 1
-        row.​​TipoDoacao: "00"
-        row.​​ValorDoacao: 200000
-
-046634226201902
-171371686000175104404820001540000000020000000
-17137168600017534563716839   0000000001500000
-17137168600017502232098800   0000000003500000
-218099822000137104404820001540000000002000000
-9000003000001
-
-
-        */
-        console.log(fileDataAsJson);
-        handleDownloadTxt(fileDataAsJson);
+        const outputData = formatDataToLayoutDBF(fileDataAsJson);
+        handleDownloadTxt(outputData);
       }
     </script>
 </body>
