@@ -302,7 +302,10 @@
         const workbook = XLSX.read(data, {type: 'binary'});
         const sheetNameList = workbook.SheetNames;
         const worksheet = workbook.Sheets[sheetNameList[0]];
-        const fileContentAsJson = XLSX.utils.sheet_to_json(worksheet);
+        const fileContentAsJson = XLSX.utils.sheet_to_json(worksheet, {
+          header: [
+            'CNPJBasico', 'AnoCalendario', 'TipoDeFundo', 'CNPJBenefic', 'CNPJDoador', 'TipoDoacao', 'ValorDoacao']
+        });
         return fileContentAsJson;
       }
 
@@ -351,8 +354,9 @@
         let totalRecordsType1 = 0;
         let totalRecordsType2 = 0;
 
-        jsonData.forEach((row, idx) => {
+        jsonData.filter((row, idx) => idx !== 0 ).forEach((row, idx) => {
           // header record type 0
+          console.log(idx, row);
           if (idx === 0) {
             outputData.push(`0${sanitizeOnlyNumbers(row.CNPJBasico)}${row.AnoCalendario}02`);
           }
@@ -394,6 +398,7 @@
         }
 
         const fileDataAsJson = await getSheetDataAsJson(inputFile.files[0]);
+        console.log(fileDataAsJson);
         const outputData = formatDataToLayoutDBF(fileDataAsJson);
         handleDownloadTxt(outputData);
       }
