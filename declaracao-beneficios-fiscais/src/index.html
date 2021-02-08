@@ -356,7 +356,6 @@
 
         jsonData.filter((row, idx) => idx !== 0 ).forEach((row, idx) => {
           // header record type 0
-          console.log(idx, row);
           if (idx === 0) {
             outputData.push(`0${sanitizeOnlyNumbers(row.CNPJBasico)}${row.AnoCalendario}02`);
           }
@@ -398,7 +397,6 @@
         }
 
         const fileDataAsJson = await getSheetDataAsJson(inputFile.files[0]);
-        console.log(fileDataAsJson);
         const outputData = formatDataToLayoutDBF(fileDataAsJson);
         handleDownloadTxt(outputData);
       }
