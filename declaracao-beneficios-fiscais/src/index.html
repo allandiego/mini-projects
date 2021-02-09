@@ -372,7 +372,7 @@
           outputData.push(line);
 
           // // footer record type 9
-          if(idx === (jsonData.length - 1)){
+          if(idx === (jsonData.length - 2)){
             outputData.push(`9${String(totalRecordsType1).padStart(6, '0')}${String(totalRecordsType2).padStart(6, '0')}`);
           }
         });
