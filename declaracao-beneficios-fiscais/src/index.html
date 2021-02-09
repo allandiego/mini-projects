@@ -374,9 +374,11 @@
           // // footer record type 9
           if(idx === (jsonData.length - 2)){
             outputData.push(`9${String(totalRecordsType1).padStart(6, '0')}${String(totalRecordsType2).padStart(6, '0')}`);
+            // required blank line
+            outputData.push('');
           }
         });
-        return outputData.join('\n');
+        return outputData.join('\r\n');
       }
 
       async function run() {
