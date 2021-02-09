@@ -378,7 +378,9 @@
             outputData.push('');
           }
         });
-        return outputData.join('\r\n');
+        
+        // return outputData.join('\r\n');
+        return outputData.join('\n');
       }
 
       async function run() {
