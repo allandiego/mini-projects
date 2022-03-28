@@ -22,7 +22,7 @@ function exportWhatsappContacts() {
       `${lastMessageDateUtc.getFullYear()}-${String(Number(lastMessageDateUtc.getMonth())+1).padStart(2, '0')}-${lastMessageDateUtc.getDate()}` : '-';
 
       const contact = {
-        formattedTitle: item.__x_formattedTitle,
+        formatedTitle: item.__x_formattedTitle,
         name: item.__x_name,
         displayName: item.__x_contact.__x_displayName,
         formattedName: item.__x_contact.__x_formattedName,
@@ -51,8 +51,8 @@ function exportWhatsappContacts() {
   // const fileContent = [headerLine,...rawLines];
 
   const fileContent = contacts
-    .filter((contact) => contact.formattedTitle.startsWith('+'))
-    .map((contact) => `'${contact.formattedTitle}, ${contact.formatedLastMessageTime}\n`);
+    .filter((contact) => contact.formatedTitle.startsWith('+'))
+    .map((contact) => `'${contact.formatedTitle}, ${contact.formatedLastMessageTime}\n`);
 
   const fileData = new Blob([fileContent.join('')], { type: 'text/plain;charset=utf-8' });
   const url = window.URL.createObjectURL(fileData);
